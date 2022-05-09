@@ -21,6 +21,7 @@ Would like to save file with SNP annotation without misannotated MNVs? y/n y
 Annotating MNVs...
 Succesfully finished
 Found 60 MNVs:
-missense_variant 60
+missense_variant 59
+stop_lost 1
 The output file(s) can be found in  .
 ```

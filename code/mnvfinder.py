@@ -23,8 +23,8 @@ if not os.path.isdir(outdir):
 
 code = {'TTT' : 'F', 'TTC' : 'F', 'TTA' : 'L', 'TTG' : 'L', 
         'TCT' : 'S', 'TCC' : 'S', 'TCA' : 'S', 'TCG' : 'S', 
-        'TAT' : 'Y', 'TAC' : 'Y', 'TAA' : 'stop', 'TAG' : 'stop', 
-        'TGT' : 'C', 'TGC' : 'C', 'TGA' : 'stop', 'TGG' : 'W', 
+        'TAT' : 'Y', 'TAC' : 'Y', 'TAA' : '*', 'TAG' : '*', 
+        'TGT' : 'C', 'TGC' : 'C', 'TGA' : '*', 'TGG' : 'W', 
         'CTT' : 'L', 'CTC' : 'L', 'CTA' : 'L', 'CTG' : 'L', 
         'CCT' : 'P', 'CCC' : 'P', 'CCA' : 'P', 'CCG' : 'P', 
         'CAT' : 'H', 'CAC' : 'H', 'CAA' : 'Q', 'CAG' : 'Q', 
@@ -107,9 +107,9 @@ def consequences(table):
     for i in genes:
         gene_table = table.loc[table['Gene'] == i]
         reference_aa = gene_table.iloc[0]['Amino_acids'][-1]
-        reference_codon = list(gene_table.iloc[0]['Codons'][-3:].lower())
+        reference_codon = list(gene_table.iloc[0]['Codons'].split('/')[1].lower())
         position = gene_table.iloc[0]['Protein_position']
-        codon = list(gene_table.iloc[0]['Codons'][-3:].lower())
+        codon = list(gene_table.iloc[0]['Codons'].split('/')[1].lower())
         for j in range(gene_table.shape[0]):
             mutant_codon = list(gene_table.iloc[j]['Codons'][0:3])
             for k in range(3):
@@ -131,9 +131,9 @@ def consequences(table):
             # Calculating consequence
             if new_aa == reference_aa:
                 consequence = 'synonymous_variant'
-            elif new_aa == 'stop':
+            elif new_aa == '*':
                 consequence = 'stop_gained'
-            elif reference_aa == 'stop':
+            elif reference_aa == '*':
                 consequence = 'stop_lost'
             elif position == 1:
                 consequence = 'start_lost'
