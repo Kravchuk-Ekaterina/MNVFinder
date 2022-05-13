@@ -7,7 +7,7 @@ path_to_plink/plink --23file <23_and_me_input.txt> --recode vcf --out snps_clean
 ```
 ## 2. Running VEP
 ```bash
-path_to_vep/vep --cache -canonical -i ./data/test1/snps_clean.vcf -o ./data/test1/test1_vep_coding.vep -tab --coding_only
+path_to_vep/vep --cache -canonical -i ./data/test1/snps_clean.vcf -o ./data/test1/test1_vep_coding.vcf --coding_only
 ```
 ## 3. Running MNVFinder
 ```bash
@@ -17,6 +17,7 @@ The output:
 ```bash
 Reading data...
 Searching for polymorphisms in the same codon...
+Would like to save file with MNVs annotated as SNPs? y/n y
 Would like to save file with SNP annotation without misannotated MNVs? y/n y
 Annotating MNVs...
 Succesfully finished

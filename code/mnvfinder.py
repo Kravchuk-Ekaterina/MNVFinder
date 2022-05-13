@@ -21,10 +21,12 @@ if not os.path.isdir(outdir):
         
 # Genetic code
 
+stop = ['*', '-']
+
 code = {'TTT' : 'F', 'TTC' : 'F', 'TTA' : 'L', 'TTG' : 'L', 
         'TCT' : 'S', 'TCC' : 'S', 'TCA' : 'S', 'TCG' : 'S', 
-        'TAT' : 'Y', 'TAC' : 'Y', 'TAA' : '*', 'TAG' : '*', 
-        'TGT' : 'C', 'TGC' : 'C', 'TGA' : '*', 'TGG' : 'W', 
+        'TAT' : 'Y', 'TAC' : 'Y', 'TAA' : stop, 'TAG' : stop, 
+        'TGT' : 'C', 'TGC' : 'C', 'TGA' : stop, 'TGG' : 'W', 
         'CTT' : 'L', 'CTC' : 'L', 'CTA' : 'L', 'CTG' : 'L', 
         'CCT' : 'P', 'CCC' : 'P', 'CCA' : 'P', 'CCG' : 'P', 
         'CAT' : 'H', 'CAC' : 'H', 'CAA' : 'Q', 'CAG' : 'Q', 
@@ -79,20 +81,25 @@ def close_finder(table):
         if gene_table.shape[0] >= 2:
             for j in range(gene_table.shape[0]-1):
                 if gene_table.iloc[j]['Protein_position'] == gene_table.iloc[j+1]['Protein_position']:
-                    if gene_table.iloc[j]['STRAND'] == gene_table.iloc[j+1]['STRAND']:
+                    if 'STRAND' in list(gene_table.columns):
+                        if gene_table.iloc[j]['STRAND'] == gene_table.iloc[j+1]['STRAND']:
+                            positions.append(gene_table.iloc[j]['Protein_position'])
+                            positions.append(gene_table.iloc[j+1]['Protein_position'])
+                    else:
                         positions.append(gene_table.iloc[j]['Protein_position'])
                         positions.append(gene_table.iloc[j+1]['Protein_position'])
         gene_table = gene_table[gene_table['Protein_position'].isin(positions)]
         out = pd.concat([out, gene_table])
     return out
 
-def MNF_remover(table):
+def MNF_remover(table, mnv_table):
     """
     Removes repeats and misannotated MNVs from the vep annotation data
     :param table: a pandas.DataFrame with vep annotation
     :returns: a pandas.DataFrame with the vep annotation data without repeats and misannotated MNVs
     """
-    return pd.concat([table,close_finder(table)]).drop_duplicates(keep=False)
+    table.drop_duplicates(keep='first')
+    return pd.concat([table,mnv_table]).drop_duplicates(keep=False)
 
 def consequences(table):
     """
@@ -102,7 +109,9 @@ def consequences(table):
     """
     out = pd.DataFrame(columns=table.columns)
     table = table.sort_values('Gene')
+    table = table[[(len(x) == 7) and x[3] == '/' and 'n' not in x for x in table['Codons']]]
     genes = list(table['Gene'].unique())
+    
     
     for i in genes:
         gene_table = table.loc[table['Gene'] == i]
@@ -111,29 +120,32 @@ def consequences(table):
         position = gene_table.iloc[0]['Protein_position']
         codon = list(gene_table.iloc[0]['Codons'].split('/')[1].lower())
         for j in range(gene_table.shape[0]):
-            mutant_codon = list(gene_table.iloc[j]['Codons'][0:3])
-            for k in range(3):
+            mutant_codon = list(gene_table.iloc[j]['Codons'].split('/')[0])
+            for k in range(len(mutant_codon)):
                 if mutant_codon[k].isupper():
                     codon[k] = mutant_codon[k]
         score = 0
-        for c in range(3):
-            if codon[c].isupper() and codon[c].lower() != reference_codon[c].lower():
+        for c in range(len(codon)):
+            if codon[c].isupper() and (codon[c].lower() != reference_codon[c].lower()):
                 score += 1
                 
         if score > 1:
             codons = ''.join(codon)+'/'+''.join(reference_codon)
             new_table = gene_table.iloc[:1]
             new_table['Codons'] = codons
-            new_aa = code[(''.join(codon)).upper()]
+            if code[(''.join(codon)).upper()] == stop:
+                new_aa = '*'
+            else:
+                new_aa = code[(''.join(codon)).upper()]
             aa = new_aa + '/' + reference_aa
-            new_table['Amino_acid'] = aa
+            new_table['Amino_acids'] = aa
             
             # Calculating consequence
             if new_aa == reference_aa:
                 consequence = 'synonymous_variant'
-            elif new_aa == '*':
+            elif new_aa in stop:
                 consequence = 'stop_gained'
-            elif reference_aa == '*':
+            elif reference_aa in stop:
                 consequence = 'stop_lost'
             elif position == 1:
                 consequence = 'start_lost'
@@ -178,9 +190,13 @@ def MNV_pipeline(file, outpath):
     data = input_reader(cleaned_file)
     print('Searching for polymorphisms in the same codon...')
     close_data = close_finder(data)
+    snps_err = input('Would like to save file with MNVs annotated as SNPs? y/n ')
+    if snps_err == 'y':
+        path = outpath + '/snps_err.tab'
+        output_writer(close_data, path)
     snp_out = input('Would like to save file with SNP annotation without misannotated MNVs? y/n ')
     if snp_out == 'y':
-        snp_data = MNF_remover(data)
+        snp_data = MNF_remover(data, close_data)
         path = outpath + '/snps.tab'
         output_writer(snp_data, path)
     print('Annotating MNVs...')

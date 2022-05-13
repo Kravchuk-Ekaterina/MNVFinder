@@ -1,0 +1,17 @@
+PLINK v1.90b6.26 64-bit (2 Apr 2022)
+Options in effect:
+  --23file vcf
+  --out snps_clean
+  --output-chr MT
+  --snps-only just-acgt
+
+Hostname: kate-the-snail
+Working directory: /home/kate_the_snail/Projects/MNVFinder/validation/test1
+Start time: Mon May  9 19:52:35 2022
+
+Random number seed: 1652115155
+13771 MB RAM detected; reserving 6885 MB for main workspace.
+Error: Basic file conversions do not support regular filtering operations.
+Rerun your command with --make-bed.
+
+End time: Mon May  9 19:52:35 2022

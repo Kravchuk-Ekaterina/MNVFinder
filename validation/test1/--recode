@@ -1,0 +1,10 @@
+PLINK v1.90b6.26 64-bit (2 Apr 2022)           www.cog-genomics.org/plink/1.9/
+(C) 2005-2022 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to snps_clean.log.
+Options in effect:
+  --23file vcf
+  --out snps_clean
+  --output-chr MT
+  --snps-only just-acgt
+
+13771 MB RAM detected; reserving 6885 MB for main workspace.
